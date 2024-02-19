@@ -511,28 +511,36 @@ void delete_slave(std::vector<__int32> &trash, IndexTable &master_index_table, s
     }
     Song cur;
     Song tmp;
-    int addr = slave_index_table.records[id];
+    __int32 addr = slave_index_table.records[id];
     Artist master;
-    --master.subrecords_count;
     read(cur, slave_records_file, addr);
-    read(master, master_records_file, master_index_table.records[cur.artist_id]);
+    __int32 mpos = master_index_table.records[cur.artist_id];
+    read(master, master_records_file, mpos);
+    --master.subrecords_count;
     bool toMod = true;
     if (master.head == addr)
     {
         master.head = cur.next;
-        read(tmp, slave_records_file, master.head);
-        tmp.prev = ABSENT;
-        write(slave_records_file, tmp, master.head);
+        if (master.head != ABSENT)
+        {
+            read(tmp, slave_records_file, master.head);
+            tmp.prev = ABSENT;
+            write(slave_records_file, tmp, master.head);
+        }
         toMod = false;
     }
     if (master.tail == addr)
     {
         master.tail = cur.prev;
-        read(tmp, slave_records_file, master.tail);
-        tmp.next = ABSENT;
-        write(slave_records_file, tmp, master.tail);
+        if (master.tail != ABSENT)
+        {
+            read(tmp, slave_records_file, master.tail);
+            tmp.next = ABSENT;
+            write(slave_records_file, tmp, master.tail);
+        }
         toMod = false;
     }
+    write(master_records_file, master, mpos);
     delete_slave(cur.id, addr, slave_index_table, trash);
     if (toMod)
     {
